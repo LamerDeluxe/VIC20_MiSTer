@@ -335,6 +335,7 @@ wire  [1:0] buttons;
 
 wire  [7:0] pd1,pd2;
 wire [15:0] joya, joyb;
+wire [15:0] joya_0,joya_1;
 wire [10:0] ps2_key;
 
 wire        ioctl_download;
@@ -397,7 +398,8 @@ hps_io #(.CONF_STR(CONF_STR), .VDNUM(3), .BLKSZ(1)) hps_io
 
 	.joystick_0(joya),
 	.joystick_1(joyb),
-	
+	.joystick_l_analog_0(joya_0),
+	.joystick_l_analog_1(joya_1),
 	.paddle_0(pd1),
 	.paddle_1(pd2)
 );
@@ -597,7 +599,7 @@ wire [7:0] mc_data = mc_nvram_sel ? mc_nvram_out : sdram_out;
 
 ///////////////////////////////////////////////////
 
-wire [15:0] joy = joya | joyb;
+wire [15:0] joy = joya;// | joyb;
 
 reg [10:0] v20_key;
 always @(posedge clk_sys) begin
@@ -624,10 +626,13 @@ VIC20 VIC20
 	.clk_i(c1541_iec_clk_o & ext_iec_clk),
 	.data_i(c1541_iec_data_o & ext_iec_data),
 
-	.i_joy(~{joy[0] | (status[30] ? joya[5] : joyb[5]),joy[1] | (status[30] ? joyb[5] : joya[5]),joy[2],joy[3]}),
+	.i_joy(~{joy[0] | (status[30] ? joyb[5] : joyb[4]),joy[1] | (status[30] ? joyb[4] : joyb[5]),joy[2],joy[3]}),
+	//.i_joy(~{joy[0] | (status[30] ? joya[5] : joyb[5]),joy[1] | (status[30] ? joyb[5] : joya[5]),joy[2],joy[3]}),
 	.i_fire(~joy[4]),
-	.i_potx(~(status[30] ? pd2 : pd1)),
-	.i_poty(~(status[30] ? pd1 : pd2)),
+	.i_potx(~(status[30] ? joya_1[7:0]+8'b01111111 : joya_1[15:8]+8'b01111111)),
+	.i_poty(~(status[30] ? joya_1[15:8]+8'b01111111 : joya_1[7:0]+8'b01111111)),
+	//.i_potx(~(status[30] ? pd2 : pd1)),
+	//.i_poty(~(status[30] ? pd1 : pd2)),
 
 	.i_ram_ext_ro(mc_loaded ? 5'b00000 : (cart_blk & ~{5{status[11]}})),
 	.i_ram_ext   (mc_loaded ? 5'b11111 : (extram|cart_blk)),
