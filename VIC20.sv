@@ -191,7 +191,7 @@ assign HDMI_FREEZE = 0;
 // 0         1         2         3          4         5         6
 // 01234567890123456789012345678901 23456789012345678901234567890123
 // 0123456789ABCDEFGHIJKLMNOPQRSTUV 0123456789ABCDEFGHIJKLMNOPQRSTUV
-// X XXX XXXXXXXXXXXXXXXXXXXXXXXXX  xx
+// X XXX XXXXXXXXXXXXXXXXXXXXXXXXXX
 
 `include "build_id.v" 
 parameter CONF_STR = {
@@ -230,7 +230,7 @@ parameter CONF_STR = {
 	"FC6,ROM,Load Kernal;",
 	"-;",
 	"OU,Swap paddles,No,Yes;",
-	"o01,Controller,Joystick,Paddle,Analog;", // 33:32
+	"OV,Paddle type,Paddle,Analog;", // 31
 	"-;",
 	"R0,Reset;",
 	"RR,Reset & Detach Cartridge;",
@@ -331,7 +331,7 @@ end
 
 /////////////////  HPS  ///////////////////////////
 
-wire [63:0] status;
+wire [31:0] status;
 wire  [1:0] buttons;
 
 wire  [7:0] pd1,pd2;
@@ -600,18 +600,20 @@ wire [7:0] mc_data = mc_nvram_sel ? mc_nvram_out : sdram_out;
 
 ///////////////////////////////////////////////////
 
-wire [1:0] port_type = status[33:32];
-wire [15:0] joy = port_type ? joya : joya|joyb;
+wire			paddle_swap = status[30];
+wire			paddle_type = status[31];
+wire [15:0] joy = paddle_type ? joya : joya|joyb;
 
-// TODO: We have joya[5] and joyb[5 - (port_type == 1 ? 1 : 0)]; but that solution might be less efficient
-wire [1:0] paddle_buttons =        {status[30] ? joya[5] : joyb[5], status[30] ? joyb[5] : joya[5]};
-wire [1:0] analog_paddle_buttons = {status[30] ? joyb[5] : joyb[4], status[30] ? joyb[4] : joyb[5]};
-wire [1:0] joy_horizontal = {joy[0], joy[1]} | (port_type ? (port_type == 1 ? paddle_buttons : analog_paddle_buttons) : {1'b0, 1'b0});
+// joystick directions combined with paddle buttons (paddle a is right, paddle b is left)
+wire [1:0] paddle_buttons = paddle_swap ? {joya[5], joyb[5]} : {joyb[5], joya[5]};
+wire [1:0] analog_paddle_buttons = paddle_swap ? {joyb[5], joyb[4]} : {joyb[4], joyb[5]};
+wire [1:0] joy_horizontal = {joy[0], joy[1]} | (paddle_type ? analog_paddle_buttons : paddle_buttons);
 
+// paddle analog values
 wire [7:0] analog_a = joya_1[15:8] + 8'b01111111;
 wire [7:0] analog_b = joya_1[7:0] + 8'b01111111;
-wire [7:0] paddle_a = port_type == 1 ? (status[30] ? pd2 : pd1) : status[30] ? analog_b: analog_a;
-wire [7:0] paddle_b = port_type == 1 ? (status[30] ? pd1 : pd2) : status[30] ? analog_a: analog_b;
+wire [7:0] paddle_a = paddle_type ? (paddle_swap ? analog_b: analog_a) : (paddle_swap ? pd2 : pd1);
+wire [7:0] paddle_b = paddle_type ? (paddle_swap ? analog_a: analog_b) : (paddle_swap ? pd1 : pd2);
 
 reg [10:0] v20_key;
 always @(posedge clk_sys) begin
@@ -638,15 +640,8 @@ VIC20 VIC20
 	.clk_i(c1541_iec_clk_o & ext_iec_clk),
 	.data_i(c1541_iec_data_o & ext_iec_data),
 	
-	//.i_joy(~{joy[0] | (status[30] ? joyb[5] : joyb[4]),joy[1] | (status[30] ? joyb[4] : joyb[5]),joy[2],joy[3]}),
-	//.i_joy(~{joy[0] | (status[30] ? joya[5] : joyb[5]),joy[1] | (status[30] ? joyb[5] : joya[5]),joy[2],joy[3]}),
 	.i_joy(~{joy_horizontal, joy[2], joy[3]}),
-	
 	.i_fire(~joy[4]),
-	//.i_potx(~(status[30] ? joya_1[7:0]+8'b01111111 : joya_1[15:8]+8'b01111111)),
-	//.i_poty(~(status[30] ? joya_1[15:8]+8'b01111111 : joya_1[7:0]+8'b01111111)),
-	//.i_potx(~(status[30] ? pd2 : pd1)),
-	//.i_poty(~(status[30] ? pd1 : pd2)),
 	.i_potx(~paddle_a),
 	.i_poty(~paddle_b),
 
