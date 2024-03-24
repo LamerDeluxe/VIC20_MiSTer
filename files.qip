@@ -16,4 +16,5 @@ set_global_assignment -name VHDL_FILE rtl/c1530.vhd
 set_global_assignment -name VHDL_FILE rtl/m6561.vhd
 set_global_assignment -name VHDL_FILE rtl/via6522.vhd
 set_global_assignment -name VHDL_FILE rtl/vic20.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/paddles.sv
 set_global_assignment -name SYSTEMVERILOG_FILE VIC20.sv
