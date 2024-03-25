@@ -161,7 +161,8 @@ module paddle_chooser
 		end
 		old_stb <= mouse[24];
 		if(old_stb != mouse[24]) begin
-			mx <= (nmx < -128) ? -9'd128 : (nmx > 127) ? 9'd127 : nmx;
+			//mx <= (nmx < -128) ? -9'd128 : (nmx > 127) ? 9'd127 : nmx;
+			mx <= (nmx < -128) ? 9'd127 : (nmx > 127) ? -9'd128 : nmx;
 		end
 
 		if (reset) begin
