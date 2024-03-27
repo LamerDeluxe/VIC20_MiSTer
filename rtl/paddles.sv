@@ -40,7 +40,8 @@ module paddle_chooser
 	output  logic   [3:0]           assigned,       // Momentary input assigned signal
 	output  logic   [3:0][7:0]      pd_out,         // Paddle output data
 	output  logic   [3:0][3:0]      paddle_type,    // Paddle output data type
-	output  logic   [3:0]           paddle_but  // Paddle buttons
+	output  logic   [3:0]           paddle_but,		// Paddle buttons
+	output  logic   [3:0]           is_paddle       // Paddle detected on this port
 );
 
 	// Determinations:
@@ -50,7 +51,7 @@ module paddle_chooser
 	logic [3:0] xs_assigned, ys_assigned, pdi_assigned, paddle_assigned, output_assigned;
 	logic mouse_assigned;
 	logic [1:0] types[4];
-	logic [1:0] index[4];
+	logic [1:0] index[4]; // TODO: Dit bevat de originele controller index. om te weten welke een joystick en welke een  paddle controller is
 	logic [3:0] analog_axis;
 	logic mouse_button;
 	logic [3:0][7:0] xs_unsigned;
@@ -124,6 +125,7 @@ module paddle_chooser
 						paddle_type[y] <= 1;
 						index[y] <= x[1:0];
 						analog_axis[y] <= 1;
+						is_paddle[x] <= 1;
 					end
 				end
 				for (logic [2:0] x = 0; x < 3'd4; x = x + 2'd1) begin
@@ -137,6 +139,7 @@ module paddle_chooser
 						paddle_type[y] <= 1;
 						analog_axis[y] <= 0;
 						index[y] <= x[1:0];
+						is_paddle[x] <= 1;
 					end
 				end
 				for (logic [2:0] x = 0; x < 3'd4; x = x + 2'd1) begin
@@ -147,6 +150,7 @@ module paddle_chooser
 						output_assigned[y] <= 1;
 						paddle_type[y] <= 0;
 						index[y] <= x[1:0];
+						is_paddle[x] <= 1;
 					end
 				end
 				if (~mouse_assigned && mouse_button) begin
@@ -175,6 +179,7 @@ module paddle_chooser
 			output_assigned <= '0;
 			use_alt_buttons <= '0;
 			paddle_type <= '0;
+			is_paddle <= 0;
 		end
 	end
 endmodule

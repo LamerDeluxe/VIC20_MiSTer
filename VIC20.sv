@@ -707,6 +707,7 @@ end
 
 wire porta_type, portb_type;
 logic [3:0] pad_b;
+logic [3:0] is_paddle;
 logic [7:0] pad_ax[4];
 logic [3:0] pad_wire;
 logic [15:0] joya_a, joya_b, joya_c, joya_d;
@@ -727,12 +728,13 @@ paddle_chooser paddles
 	.mouse      (ps2_mouse),
 	.analog     ({joya_3, joya_2, joya_1, joya_0}),
 	.paddle     ({pd_3, pd_2, pd_1, pd_0}),
-	.buttons_in ({joy3[9], joy2[9], joy1[9], joy0[9]}),
+	.buttons_in ({joy3[4], joy2[4], joy1[4], joy0[4]}),
 	.alt_b_in   ({joy3[5], joy2[5], joy1[5], joy0[5]}),
 
 	.assigned   ({pad3_assigned, pad2_assigned, pad1_assigned, pad0_assigned}),
 	.pd_out     ({pad_ax[3], pad_ax[2], pad_ax[1], pad_ax[0]}),
-	.paddle_but (pad_b)
+	.paddle_but (pad_b),
+	.is_paddle  (is_paddle)
 );
 
 logic [31:0] difference0, difference1, difference2, difference3;
@@ -875,16 +877,15 @@ end
 
 wire			paddle_swap = status[30];
 wire [1:0]	port_type = status[31];
-wire [15:0] joy = joya;//port_type == 1 ? joya : joya|joyb;
+//wire [15:0] joy = (~is_paddle[0] ? joy0): | (~is_paddle[1] ? joy1:) | (~is_paddle[2] ? joy2:) | (~is_paddle[3] ? joy3:);
+wire [15:0] joy = joy0 | joy1 | joy2 | joy3;
+wire        firebutton = (~is_paddle[0] ? joy0[4] : 1'b0) | (~is_paddle[1] ? joy1[4] : 1'b0) | (~is_paddle[2] ? joy2[4] : 1'b0) | (~is_paddle[3] ? joy3[4] : 1'b0);
 
 // joystick directions combined with paddle buttons (paddle a is right, paddle b is left)
 wire [1:0] paddle_buttons = paddle_swap ? {pad_b[0], pad_b[1]} : {pad_b[1], pad_b[0]}; //{joya[5], joyb[5]} : {joyb[5], joya[5]};
-//wire [1:0] analog_paddle_buttons = paddle_swap ? {joy[5], joy[4]} : {joy[4], joy[5]};
 wire [1:0] joy_horizontal = {joy[0], joy[1]} | paddle_buttons;
 
 // paddle analog values
-//wire [7:0] analog_a = (joya_0[15:8] + joya_1[15:8]) + 8'b01111111;
-//wire [7:0] analog_b = (joya_0[7:0]  + joya_1[7:0])  + 8'b01111111;
 wire [7:0] paddle_a = paddle_swap ? pad_ax[1][7:0] : pad_ax[0][7:0];
 wire [7:0] paddle_b = paddle_swap ? pad_ax[0][7:0] : pad_ax[1][7:0];
 
@@ -1041,6 +1042,7 @@ always @(posedge CLK_VIDEO) begin
 		if(HDMI_HEIGHT == 800)  begin vcrop <= 200; wide <= vcrop_en; end
 		if(HDMI_HEIGHT == 1080) vcrop <= (~pal | status[24]) ? 10'd216 : 10'd270;
 		if(HDMI_HEIGHT == 1200) vcrop <= 240;
+		if(HDMI_HEIGHT == 1536) begin vcrop <= 256; wide <= vcrop_en; end
 	end
 end
 
