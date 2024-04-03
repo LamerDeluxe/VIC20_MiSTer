@@ -239,7 +239,6 @@ parameter CONF_STR = {
 
 // PADDLE START
 	"jn,A,L|P;",
-	//"jp,B,Y,R,Select,Start,X|P;",
 	"I,",
 	"Paddle 1A Assigned,",
 	"Paddle 1B Assigned,",
@@ -354,9 +353,6 @@ end
 wire [63:0] status;
 wire  [1:0] buttons;
 
-//wire  [7:0] pd1,pd2;
-//wire [15:0] joya, joyb;
-//wire [15:0] joya_0,joya_1;
 wire [10:0] ps2_key;
 
 wire        ioctl_download;
@@ -388,21 +384,8 @@ wire [21:0] gamma_bus;
 wire [15:0] joy0,joy1,joy2,joy3;
 wire [15:0] joya_0,joya_1,joya_2,joya_3,joyar_0,joyar_1,joyar_2,joyar_3;
 wire  [7:0] pd_0,pd_1,pd_2,pd_3;
-//wire        ioctl_wait;
-
-//reg  [31:0] sd_lba[1];
-//reg         sd_rd;
-//reg         sd_wr;
-//wire        sd_ack;
-//wire  [8:0] sd_buff_addr;
-//wire  [7:0] sd_buff_dout;
-//wire  [7:0] sd_buff_din[1];
-//wire        sd_buff_wr;
-//reg         en216p;
 wire [24:0] ps2_mouse;
-//logic [10:0] ps2_key;
-//logic [15:0] ps2_mouse_ext;
-//logic is_snac0, is_snac1;
+
 logic info_req;
 logic [7:0] info;
 logic [1:0] last_paddle;
@@ -421,6 +404,29 @@ hps_io #(.CONF_STR(CONF_STR), .VDNUM(3), .BLKSZ(1)) hps_io
 	.status_menumask({mc_loaded,tap_loaded,en1080p,|vcrop,1'b0}),
 	.forced_scandoubler(forced_scandoubler),
 	.gamma_bus(gamma_bus),
+	
+	.ps2_key(ps2_key),
+
+	.ioctl_download(ioctl_download),
+	.ioctl_index(ioctl_index),
+	.ioctl_wr(ioctl_wr),
+	.ioctl_addr(ioctl_addr),
+	.ioctl_dout(ioctl_dout),
+	.ioctl_file_ext(ioctl_file_ext),
+	.ioctl_wait(ioctl_wait),
+
+	.sd_lba(sd_lba),
+	.sd_blk_cnt(sd_blk_cnt),
+	.sd_rd(sd_rd),
+	.sd_wr(sd_wr),
+	.sd_ack(sd_ack),
+	.sd_buff_addr(sd_buff_addr),
+	.sd_buff_dout(sd_buff_dout),
+	.sd_buff_din(sd_buff_din),
+	.sd_buff_wr(sd_buff_wr),
+	.img_mounted(img_mounted),
+	.img_readonly(img_readonly),
+	.img_size(img_size),
 
 // PADDLE_START
 	
@@ -444,39 +450,9 @@ hps_io #(.CONF_STR(CONF_STR), .VDNUM(3), .BLKSZ(1)) hps_io
 	.info_req           (info_req),
 	.info               (info),
 
-	.ps2_mouse          (ps2_mouse),
+	.ps2_mouse          (ps2_mouse)
 	
 // PADDLE_END	
-	
-	.ps2_key(ps2_key),
-
-	.ioctl_download(ioctl_download),
-	.ioctl_index(ioctl_index),
-	.ioctl_wr(ioctl_wr),
-	.ioctl_addr(ioctl_addr),
-	.ioctl_dout(ioctl_dout),
-	.ioctl_file_ext(ioctl_file_ext),
-	.ioctl_wait(ioctl_wait),
-
-	.sd_lba(sd_lba),
-	.sd_blk_cnt(sd_blk_cnt),
-	.sd_rd(sd_rd),
-	.sd_wr(sd_wr),
-	.sd_ack(sd_ack),
-	.sd_buff_addr(sd_buff_addr),
-	.sd_buff_dout(sd_buff_dout),
-	.sd_buff_din(sd_buff_din),
-	.sd_buff_wr(sd_buff_wr),
-	.img_mounted(img_mounted),
-	.img_readonly(img_readonly),
-	.img_size(img_size)
-
-	//.joystick_0(joya),
-	//.joystick_1(joyb),
-	//.joystick_l_analog_0(joya_0),
-	//.joystick_l_analog_1(joya_1),
-	//.paddle_0(pd1),
-	//.paddle_1(pd2)
 );
 
 /////////////////  RESET  /////////////////////////
@@ -676,12 +652,12 @@ wire [7:0] mc_data = mc_nvram_sel ? mc_nvram_out : sdram_out;
 
 
 ///// PADDLE
-logic [3:0] i_read; // something to do with cart ram
+//logic [3:0] i_read; // something to do with cart ram
 
-logic [3:0] iout;
-logic [3:0] idump;
-logic [1:0] ilatch;
-logic [7:0] PAin, PBin, PAout, PBout;
+//logic [3:0] iout;
+//logic [3:0] idump;
+//logic [1:0] ilatch;
+//logic [7:0] PAin, PBin, PAout, PBout;
 
 assign info_req = pad0_assigned | pad1_assigned | pad2_assigned | pad3_assigned;// | toggle_paddle;
 
@@ -695,17 +671,9 @@ always_comb begin
 		info = 8'd3;
 	if (pad3_assigned)
 		info = 8'd4;
-	//if (toggle_rdiff)
-	//	info = status[12] ? 8'd5: 8'd6;
-	//if (toggle_ldiff)
-	//	info = status[13] ? 8'd7: 8'd8;
-	//if (toggle_bw)
-	//	info = status[62] ? 8'd9: 8'd10;
-	//if (toggle_paddle)
-	//	info = (auto_paddle ? 8'd11 : 8'd12);
 end
 
-wire porta_type, portb_type;
+wire porta_type = status[31], portb_type = status[31];
 logic [3:0] pad_b;
 logic [3:0] is_paddle;
 logic [7:0] pad_ax[4];
@@ -737,152 +705,20 @@ paddle_chooser paddles
 	.is_paddle  (is_paddle)
 );
 
-//logic [31:0] difference0, difference1, difference2, difference3;
-
-//wire [3:0] pread_mux1 = status[49] ? {i_read[2], i_read[3], i_read[0], i_read[1]} : i_read;
-//wire [3:0] pread_mux2 = status[7] ? {pread_mux1[1:0], pread_mux1[3:2]} : pread_mux1;
-//wire [3:0] pread_mux1 = i_read;
-//wire [3:0] pread_mux2 = pread_mux1;
-
-// TODO: iout is een 7800 ding, gebruikt om potmeter te clearen, puls elke VBL ofzo?
-//       filtering systeem dat ik eigenlijk niet wil
-//paddle_timer pt0 (clk_sys, 1, reset || ~paddle_mask[0], {1'b0, pad_ax[0][7:0]}, ~iout[1], pread_mux2[0], pad_wire[0], difference0);
-//paddle_timer pt1 (clk_sys, 1, reset || ~paddle_mask[1], {1'b0, pad_ax[1][7:0]}, ~iout[1], pread_mux2[1], pad_wire[1], difference1);
-//paddle_timer pt2 (clk_sys, 1, reset || ~paddle_mask[2], {1'b0, pad_ax[2][7:0]}, ~iout[1], pread_mux2[2], pad_wire[2], difference2);
-//paddle_timer pt3 (clk_sys, 1, reset || ~paddle_mask[3], {1'b0, pad_ax[3][7:0]}, ~iout[1], pread_mux2[3], pad_wire[3], difference3);
-
-//wire pada_0, pada_1, padb_0, padb_1;
-
-//wire joya_b2 = ~PBout[2];// && ~tia_en && joy0_type != 5;
-//wire joyb_b2 = ~PBout[4];// && ~tia_en && joy1_type != 5;
-
-//logic [15:0] joya, joyb;
-//assign joya = joy0; //(status[46] && ~iout[0]) ? joy2 : (status[7] ? joy1 : joy0);
-//assign joyb = joy1; //(status[46] && ~iout[0]) ? joy3 : (status[7] ? joy0 : joy1);
-
-//wire [3:0] pad_muxa, pad_muxb;
-
-//logic [7:0] header_type0, header_type1;
-always_comb begin
-/*
-	case (joy0_type)
-		0: header_type0 = 8'd0;
-		1: header_type0 = 8'd1;
-		2: header_type0 = 8'd2;
-		3: header_type0 = 8'd3;
-		4: header_type0 = 8'd4;
-		5: header_type0 = 8'd1;
-		6: header_type0 = 8'd6;
-		7: header_type0 = 8'd5;
-		8: header_type0 = 8'd7;
-		9: header_type0 = 8'd8;
-		default: header_type0 = 8'd0;
-	endcase
-
-	case (joy1_type)
-		0: header_type1 = 8'd0;
-		1: header_type1 = 8'd1;
-		2: header_type1 = 8'd2;
-		3: header_type1 = 8'd3;
-		4: header_type1 = 8'd4;
-		5: header_type1 = 8'd1;
-		6: header_type1 = 8'd6;
-		7: header_type1 = 8'd5;
-		8: header_type1 = 8'd7;
-		9: header_type1 = 8'd8;
-		default: header_type1 = 8'd0;
-	endcase
-*/
-	
-	/*
-	robor[3] = ~($signed(joyar_0[7:0]) > 63);
-	robor[2] = ~($signed(joyar_0[7:0]) < -63);
-	robor[1] = ~($signed(joyar_0[15:8]) > 63);
-	robor[0] = ~($signed(joyar_0[15:8]) < -63);
-
-	robol[3] = ~($signed(joya_0[7:0]) > 63);
-	robol[2] = ~($signed(joya_0[7:0]) < -63);
-	robol[1] = ~($signed(joya_0[15:8]) > 63);
-	robol[0] = ~($signed(joya_0[15:8]) < -63);
-
-	is_snac0 = porta_type == snac_type;
-	is_snac1 = portb_type == snac_type;
-	USER_OUT = '1;
-	if (is_snac0) begin
-		{USER_OUT[6], USER_OUT[4], USER_OUT[3], USER_OUT[5], USER_OUT[0], USER_OUT[1]} = {iout[1:0], PAout[7:4]};
-	end else if (is_snac1) begin
-		{USER_OUT[6], USER_OUT[4], USER_OUT[3], USER_OUT[5], USER_OUT[0], USER_OUT[1]} = {iout[3:2], PAout[3:0]};
-	end
-	*/
-	
-	porta_type = status[31]; //|status[41:38] ? {4'd0, status[41:38] - 1'd1} : (auto_paddle ? 2'd3 : header_type0);
-	portb_type = status[31]; //1'd0; //|status[45:42] ? {4'd0, status[45:42] - 1'd1} : (auto_paddle ? 2'd3 : header_type1);
-
-	//idump = tia_en ? {(|portb_type ? 1'b0 : ~joyb[5]), 1'd0, (|porta_type ? 1'b0 : ~joya[5]), 1'd0} : {joyb[4], joyb[5], joya[4], joya[5]}; // P2 F1, P2 F2, P1 F1, P1 F2 or Analog
-	//idump = {joyb[4], joyb[5], joya[4], joya[5]}; // P2 F1, P2 F2, P1 F1, P1 F2 or Analog
-	//PAin[7:4] = {~joya[0], ~joya[1], ~joya[2], ~joya[3]}; // P1: R L D U
-	//PAin[3:0] = {~joyb[0], ~joyb[1], ~joyb[2], ~joyb[3]}; // P2: R L D U
-	//ilatch[0] = tia_en ? ~joya[4] : ~(joya[4] || joya[5]); // P1 Fire
-	//ilatch[1] = tia_en ? ~joyb[4] : ~(joyb[4] || joyb[5]); // P2 Fire
-	//ilatch[0] = ~(joya[4] || joya[5]); // P1 Fire
-	//ilatch[1] = ~(joyb[4] || joyb[5]); // P2 Fire
-	
-	//pad_muxa = ~status[30] ? {~pad_b[0], ~pad_b[1], pad_wire[1:0]} : {~pad_b[1:0], pad_wire[0], pad_wire[1]};
-	//pad_muxb = ~status[30] ? {~pad_b[2], ~pad_b[3], pad_wire[3:2]} : {~pad_b[3:2], pad_wire[2], pad_wire[3]};
-	
-	//case (porta_type)
-		//0: begin PAin[7:4] = 4'b1111; ilatch[0] = 1'b1; idump[1:0] = 2'b00; end
-		//2: if (~gun_port) begin PAin[7:4] = {3'b111, gun_trigger}; ilatch[0] = ~gun_sensor; idump[1:0] = 2'b00; end
-		//1: begin PAin[7:4] = {pad_muxa[3:2], 2'b11}; idump[1:0] = pad_muxa[1:0]; ilatch[0] = 1'b1; end
-		//4: begin PAin[7:4] = trackball; ilatch[0] = ~trackball_button; idump[1:0] = 2'b00; end
-		//5: begin PAin[7:4] = PAout[7:4]; ilatch[0] = keypad0[6]; idump[1:0] = keypad0[5:4]; end
-		//6: begin PAin[7:4] = {2'b11, st_mouse[1:0]}; ilatch[0] = st_mouse[5]; idump[1:0] = 2'b00; end
-		//7: begin PAin[7:4] = st_mouse[3:0]; ilatch[0] = ~st_mouse[5]; idump[1:0] = st_mouse[6:5]; end
-		//8: begin PAin[7:4] = amiga_mouse[3:0]; ilatch[0] = ~amiga_mouse[5]; idump[1:0] = amiga_mouse[6:5]; end
-		//9: begin idump[1:0] = {joya[5], joya[9]}; end
-		//10: begin PAin[7:4] = robol; end
-		//11: begin PAin[6] = ep_do; end
-		//snac_type: begin PAin[7:4] = snac_pa_in; ilatch[0] = snac_il_in; idump[1:0] = snac_id_in[1:0]; end
-		//default: ;
-	//endcase
-
-	/*
-	case (portb_type)
-		0: begin PAin[3:0] = 4'b1111; ilatch[1] = 1'b1; idump[3:2] = 2'b00; end
-		2: if (gun_port) begin PAin[3:0] = {3'b111, gun_trigger}; ilatch[1] = ~gun_sensor; idump[3:2] = 2'b00; end
-		3: begin PAin[3:0] = {pad_muxb[3:2], 2'b11}; idump[3:2] = pad_muxb[1:0]; ilatch[1] = 1'b1; end
-		4: if (porta_type != 4) begin PAin[3:0] = trackball; ilatch[1] = ~trackball_button; idump[3:2] = 2'b00; end
-		5: begin PAin[3:0] = PAout[3:0]; ilatch[1] = keypad1[6]; idump[3:2] = keypad1[5:4]; end
-		6: begin PAin[3:0] = {2'b11, st_mouse[1:0]}; ilatch[1] = st_mouse[5]; idump[3:2] = 2'b00; end
-		7: begin PAin[3:0] = st_mouse[3:0]; ilatch[1] = ~st_mouse[5]; idump[3:2] = st_mouse[6:5]; end
-		8: begin PAin[3:0] = amiga_mouse[3:0]; ilatch[1] = ~amiga_mouse[5]; idump[3:2] = amiga_mouse[6:5]; end
-		9: begin idump[3:2] = {joyb[5], joyb[9]}; end
-		10: begin PAin[3:0] = robor; end
-		11: begin PAin[2] = ep_do; end
-		snac_type: if (~is_snac0) begin PAin[3:0] = snac_pa_in; ilatch[1] = snac_il_in; idump[3:2] = snac_id_in[1:0]; end
-		default: ;
-	endcase
-
-	// In two button mode, pin 6 is pulled up strongly, and won't lower
-	// In one button mode, it will lower if *either* pin 5 or 9 are pressed
-	if (joya_b2)
-		ilatch[0] = 1;
-	if (joyb_b2)
-		ilatch[1] = 1;
-		*/
-end
-
+// always_comb begin
+// 	porta_type = status[31];
+// 	portb_type = status[31];
+// end
 
 /////
 
 wire			paddle_swap = status[30];
 wire [1:0]	port_type = status[31];
-//wire [15:0] joy = (~is_paddle[0] ? joy0): | (~is_paddle[1] ? joy1:) | (~is_paddle[2] ? joy2:) | (~is_paddle[3] ? joy3:);
 wire [15:0] joy = joy0 | joy1 | joy2 | joy3;
 wire        firebutton = (~is_paddle[0] ? joy0[4] : 1'b0) | (~is_paddle[1] ? joy1[4] : 1'b0) | (~is_paddle[2] ? joy2[4] : 1'b0) | (~is_paddle[3] ? joy3[4] : 1'b0);
 
 // joystick directions combined with paddle buttons (paddle a is right, paddle b is left)
-wire [1:0] paddle_buttons = paddle_swap ? {pad_b[0], pad_b[1]} : {pad_b[1], pad_b[0]}; //{joya[5], joyb[5]} : {joyb[5], joya[5]};
+wire [1:0] paddle_buttons = paddle_swap ? {pad_b[0], pad_b[1]} : {pad_b[1], pad_b[0]};
 wire [1:0] joy_horizontal = {joy[0], joy[1]} | paddle_buttons;
 
 // paddle analog values
