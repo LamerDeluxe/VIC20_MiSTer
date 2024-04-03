@@ -37,6 +37,8 @@ module paddle_chooser
 	input   logic   [3:0]           buttons_in,
 	input   logic   [3:0]           alt_b_in,
 
+	input	logic					paddle_range,	// clamped or repeating (mouse/spinner) 
+
 	output  logic   [3:0]           assigned,       // Momentary input assigned signal
 	output  logic   [3:0][7:0]      pd_out,         // Paddle output data
 	output  logic   [3:0][3:0]      paddle_type,    // Paddle output data type
@@ -165,8 +167,7 @@ module paddle_chooser
 		end
 		old_stb <= mouse[24];
 		if(old_stb != mouse[24]) begin
-			//mx <= (nmx < -128) ? -9'd128 : (nmx > 127) ? 9'd127 : nmx;
-			mx <= (nmx < -128) ? 9'd127 : (nmx > 127) ? -9'd128 : nmx;
+			mx <= paddle_range ? nmx[7:0] : (nmx < -128 ? -9'd128 : (nmx > 127 ? 9'd127 : nmx));
 		end
 
 		if (reset) begin

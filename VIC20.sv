@@ -191,7 +191,7 @@ assign HDMI_FREEZE = 0;
 // 0         1         2         3          4         5         6
 // 01234567890123456789012345678901 23456789012345678901234567890123
 // 0123456789ABCDEFGHIJKLMNOPQRSTUV 0123456789ABCDEFGHIJKLMNOPQRSTUV
-// X XXX XXXXXXXXXXXXXXXXXXXXXXXXXx
+// X XXX XXXXXXXXXXXXXXXXXXXXXXXXXx X
 
 
 `include "build_id.v" 
@@ -230,8 +230,9 @@ parameter CONF_STR = {
 	"OF,Kernal,Loadable,Standard;",
 	"FC6,ROM,Load Kernal;",
 	"-;",
-	"OU,Swap paddles,No,Yes;",
+	"OU,Swap paddles,No,Yes;", // 30
 	"OV,Controller,Joystick,Paddle;", // 31
+	"o0,Paddle Range, Clamp, Repeat;", // 32
 	"-;",
 	"R0,Reset;",
 	"RR,Reset & Detach Cartridge;",
@@ -652,14 +653,7 @@ wire [7:0] mc_data = mc_nvram_sel ? mc_nvram_out : sdram_out;
 
 
 ///// PADDLE
-//logic [3:0] i_read; // something to do with cart ram
-
-//logic [3:0] iout;
-//logic [3:0] idump;
-//logic [1:0] ilatch;
-//logic [7:0] PAin, PBin, PAout, PBout;
-
-assign info_req = pad0_assigned | pad1_assigned | pad2_assigned | pad3_assigned;// | toggle_paddle;
+assign info_req = pad0_assigned | pad1_assigned | pad2_assigned | pad3_assigned;
 
 always_comb begin
 	info = 8'd0;
@@ -698,6 +692,7 @@ paddle_chooser paddles
 	.paddle     ({pd_3, pd_2, pd_1, pd_0}),
 	.buttons_in ({joy3[4], joy2[4], joy1[4], joy0[4]}),
 	.alt_b_in   ({joy3[5], joy2[5], joy1[5], joy0[5]}),
+	.paddle_range (status[32]),
 
 	.assigned   ({pad3_assigned, pad2_assigned, pad1_assigned, pad0_assigned}),
 	.pd_out     ({pad_ax[3], pad_ax[2], pad_ax[1], pad_ax[0]}),
@@ -705,14 +700,9 @@ paddle_chooser paddles
 	.is_paddle  (is_paddle)
 );
 
-// always_comb begin
-// 	porta_type = status[31];
-// 	portb_type = status[31];
-// end
-
 /////
 
-wire			paddle_swap = status[30];
+wire		paddle_swap = status[30];
 wire [1:0]	port_type = status[31];
 wire [15:0] joy = joy0 | joy1 | joy2 | joy3;
 wire        firebutton = (~is_paddle[0] ? joy0[4] : 1'b0) | (~is_paddle[1] ? joy1[4] : 1'b0) | (~is_paddle[2] ? joy2[4] : 1'b0) | (~is_paddle[3] ? joy3[4] : 1'b0);
