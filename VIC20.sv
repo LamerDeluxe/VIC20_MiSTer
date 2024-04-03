@@ -737,30 +737,30 @@ paddle_chooser paddles
 	.is_paddle  (is_paddle)
 );
 
-logic [31:0] difference0, difference1, difference2, difference3;
+//logic [31:0] difference0, difference1, difference2, difference3;
 
 //wire [3:0] pread_mux1 = status[49] ? {i_read[2], i_read[3], i_read[0], i_read[1]} : i_read;
 //wire [3:0] pread_mux2 = status[7] ? {pread_mux1[1:0], pread_mux1[3:2]} : pread_mux1;
-wire [3:0] pread_mux1 = i_read;
-wire [3:0] pread_mux2 = pread_mux1;
+//wire [3:0] pread_mux1 = i_read;
+//wire [3:0] pread_mux2 = pread_mux1;
 
 // TODO: iout is een 7800 ding, gebruikt om potmeter te clearen, puls elke VBL ofzo?
 //       filtering systeem dat ik eigenlijk niet wil
-paddle_timer pt0 (clk_sys, 1, reset || ~paddle_mask[0], {1'b0, pad_ax[0][7:0]}, ~iout[1], pread_mux2[0], pad_wire[0], difference0);
-paddle_timer pt1 (clk_sys, 1, reset || ~paddle_mask[1], {1'b0, pad_ax[1][7:0]}, ~iout[1], pread_mux2[1], pad_wire[1], difference1);
-paddle_timer pt2 (clk_sys, 1, reset || ~paddle_mask[2], {1'b0, pad_ax[2][7:0]}, ~iout[1], pread_mux2[2], pad_wire[2], difference2);
-paddle_timer pt3 (clk_sys, 1, reset || ~paddle_mask[3], {1'b0, pad_ax[3][7:0]}, ~iout[1], pread_mux2[3], pad_wire[3], difference3);
+//paddle_timer pt0 (clk_sys, 1, reset || ~paddle_mask[0], {1'b0, pad_ax[0][7:0]}, ~iout[1], pread_mux2[0], pad_wire[0], difference0);
+//paddle_timer pt1 (clk_sys, 1, reset || ~paddle_mask[1], {1'b0, pad_ax[1][7:0]}, ~iout[1], pread_mux2[1], pad_wire[1], difference1);
+//paddle_timer pt2 (clk_sys, 1, reset || ~paddle_mask[2], {1'b0, pad_ax[2][7:0]}, ~iout[1], pread_mux2[2], pad_wire[2], difference2);
+//paddle_timer pt3 (clk_sys, 1, reset || ~paddle_mask[3], {1'b0, pad_ax[3][7:0]}, ~iout[1], pread_mux2[3], pad_wire[3], difference3);
 
-wire pada_0, pada_1, padb_0, padb_1;
+//wire pada_0, pada_1, padb_0, padb_1;
 
-wire joya_b2 = ~PBout[2];// && ~tia_en && joy0_type != 5;
-wire joyb_b2 = ~PBout[4];// && ~tia_en && joy1_type != 5;
+//wire joya_b2 = ~PBout[2];// && ~tia_en && joy0_type != 5;
+//wire joyb_b2 = ~PBout[4];// && ~tia_en && joy1_type != 5;
 
-logic [15:0] joya, joyb;
-assign joya = joy0; //(status[46] && ~iout[0]) ? joy2 : (status[7] ? joy1 : joy0);
-assign joyb = joy1; //(status[46] && ~iout[0]) ? joy3 : (status[7] ? joy0 : joy1);
+//logic [15:0] joya, joyb;
+//assign joya = joy0; //(status[46] && ~iout[0]) ? joy2 : (status[7] ? joy1 : joy0);
+//assign joyb = joy1; //(status[46] && ~iout[0]) ? joy3 : (status[7] ? joy0 : joy1);
 
-wire [3:0] pad_muxa, pad_muxb;
+//wire [3:0] pad_muxa, pad_muxb;
 
 //logic [7:0] header_type0, header_type1;
 always_comb begin
@@ -819,21 +819,21 @@ always_comb begin
 	portb_type = status[31]; //1'd0; //|status[45:42] ? {4'd0, status[45:42] - 1'd1} : (auto_paddle ? 2'd3 : header_type1);
 
 	//idump = tia_en ? {(|portb_type ? 1'b0 : ~joyb[5]), 1'd0, (|porta_type ? 1'b0 : ~joya[5]), 1'd0} : {joyb[4], joyb[5], joya[4], joya[5]}; // P2 F1, P2 F2, P1 F1, P1 F2 or Analog
-	idump = {joyb[4], joyb[5], joya[4], joya[5]}; // P2 F1, P2 F2, P1 F1, P1 F2 or Analog
-	PAin[7:4] = {~joya[0], ~joya[1], ~joya[2], ~joya[3]}; // P1: R L D U
-	PAin[3:0] = {~joyb[0], ~joyb[1], ~joyb[2], ~joyb[3]}; // P2: R L D U
+	//idump = {joyb[4], joyb[5], joya[4], joya[5]}; // P2 F1, P2 F2, P1 F1, P1 F2 or Analog
+	//PAin[7:4] = {~joya[0], ~joya[1], ~joya[2], ~joya[3]}; // P1: R L D U
+	//PAin[3:0] = {~joyb[0], ~joyb[1], ~joyb[2], ~joyb[3]}; // P2: R L D U
 	//ilatch[0] = tia_en ? ~joya[4] : ~(joya[4] || joya[5]); // P1 Fire
 	//ilatch[1] = tia_en ? ~joyb[4] : ~(joyb[4] || joyb[5]); // P2 Fire
-	ilatch[0] = ~(joya[4] || joya[5]); // P1 Fire
-	ilatch[1] = ~(joyb[4] || joyb[5]); // P2 Fire
+	//ilatch[0] = ~(joya[4] || joya[5]); // P1 Fire
+	//ilatch[1] = ~(joyb[4] || joyb[5]); // P2 Fire
 	
-	pad_muxa = ~status[30] ? {~pad_b[0], ~pad_b[1], pad_wire[1:0]} : {~pad_b[1:0], pad_wire[0], pad_wire[1]};
-	pad_muxb = ~status[30] ? {~pad_b[2], ~pad_b[3], pad_wire[3:2]} : {~pad_b[3:2], pad_wire[2], pad_wire[3]};
+	//pad_muxa = ~status[30] ? {~pad_b[0], ~pad_b[1], pad_wire[1:0]} : {~pad_b[1:0], pad_wire[0], pad_wire[1]};
+	//pad_muxb = ~status[30] ? {~pad_b[2], ~pad_b[3], pad_wire[3:2]} : {~pad_b[3:2], pad_wire[2], pad_wire[3]};
 	
-	case (porta_type)
-		0: begin PAin[7:4] = 4'b1111; ilatch[0] = 1'b1; idump[1:0] = 2'b00; end
+	//case (porta_type)
+		//0: begin PAin[7:4] = 4'b1111; ilatch[0] = 1'b1; idump[1:0] = 2'b00; end
 		//2: if (~gun_port) begin PAin[7:4] = {3'b111, gun_trigger}; ilatch[0] = ~gun_sensor; idump[1:0] = 2'b00; end
-		1: begin PAin[7:4] = {pad_muxa[3:2], 2'b11}; idump[1:0] = pad_muxa[1:0]; ilatch[0] = 1'b1; end
+		//1: begin PAin[7:4] = {pad_muxa[3:2], 2'b11}; idump[1:0] = pad_muxa[1:0]; ilatch[0] = 1'b1; end
 		//4: begin PAin[7:4] = trackball; ilatch[0] = ~trackball_button; idump[1:0] = 2'b00; end
 		//5: begin PAin[7:4] = PAout[7:4]; ilatch[0] = keypad0[6]; idump[1:0] = keypad0[5:4]; end
 		//6: begin PAin[7:4] = {2'b11, st_mouse[1:0]}; ilatch[0] = st_mouse[5]; idump[1:0] = 2'b00; end
@@ -843,8 +843,8 @@ always_comb begin
 		//10: begin PAin[7:4] = robol; end
 		//11: begin PAin[6] = ep_do; end
 		//snac_type: begin PAin[7:4] = snac_pa_in; ilatch[0] = snac_il_in; idump[1:0] = snac_id_in[1:0]; end
-		default: ;
-	endcase
+		//default: ;
+	//endcase
 
 	/*
 	case (portb_type)

@@ -184,6 +184,7 @@ module paddle_chooser
 	end
 endmodule
 
+/*
 module paddle_timer (
 	input clk,
 	input ce,
@@ -223,7 +224,7 @@ always @(posedge clk) if (ce) begin
 		end
 	end else begin
 		clear_count <= 0;
-		if (high_count < difference /*paddle_timing[kohms_big]*/) begin
+		if (high_count < difference) begin //paddle_timing[kohms_big]
 			high_count <= high_count + NS_PER_TICK;
 		end else begin
 			charged <= 1;
@@ -385,3 +386,4 @@ end
 // };
 
 endmodule
+*/
