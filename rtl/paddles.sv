@@ -37,7 +37,7 @@ module paddle_chooser
 	input   logic   [3:0]           buttons_in,
 	input   logic   [3:0]           alt_b_in,
 
-	input	logic					paddle_range,	// clamped or repeating (mouse/spinner) 
+	input	  logic                   paddle_range,	// clamped or repeating (mouse/spinner) 
 
 	output  logic   [3:0]           assigned,       // Momentary input assigned signal
 	output  logic   [3:0][7:0]      pd_out,         // Paddle output data
@@ -180,7 +180,7 @@ module paddle_chooser
 			output_assigned <= '0;
 			use_alt_buttons <= '0;
 			paddle_type <= '0;
-			is_paddle <= 0;
+			is_paddle <= '0;
 		end
 	end
 endmodule
