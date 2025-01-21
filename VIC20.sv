@@ -705,7 +705,7 @@ paddle_chooser paddles
 
 wire		   paddle_swap = status[30];
 wire [1:0]	port_type = status[31];
-wire [15:0] joy = joy0 | joy1 | joy2 | joy3;
+wire [15:0] joy = joy0 | joy1 | joy2 | joy3; //TODO: Moeten we hier nog iets uitfilteren als het een paddle controller is?
 // TODO: Ik verwacht niet dat je er hier twee van weg kan halen. De eerste twee paddles waarschijnlijk niet altijd nul en één, of ligt dat aan controller nummer?
 wire        firebutton = (~is_paddle[0] ? joy0[4] : 1'b0) | (~is_paddle[1] ? joy1[4] : 1'b0) | (~is_paddle[2] ? joy2[4] : 1'b0) | (~is_paddle[3] ? joy3[4] : 1'b0);
 
