@@ -239,20 +239,10 @@ parameter CONF_STR = {
 	"J,Fire,Paddle Fire|P;",
 
 // PADDLE START
-	"jn,A,L|P;", // TODO: Is dit dubbelop met boven? Wat is het verschil tussen J en jn?
-	"I,", // TODO: Start indicatie van info teksten
-	"Paddle 1A Assigned,",
-	"Paddle 1B Assigned,",
-	//"Paddle 2A Assigned,",
-	//"Paddle 2B Assigned,",
-	//"Difficulty Right: A,",
-	//"Difficulty Right: B,",
-	//"Difficulty Left: A,",
-	//"Difficulty Left: B,",
-	//"Black and White: Off,",
-	//"Black and White: On,",
-	//"Paddle Mode Enabled,", // Wat is dit? Kan je die toggelen bij de 7800 core?
-	//"Joystick Mode Enabled;",
+	"jn,A,L|P;",
+	"I,",
+	"Paddle A Assigned,",
+	"Paddle B Assigned,",
 // PADDLE END
 
 	"V,v",`BUILD_DATE
@@ -389,9 +379,7 @@ wire [24:0] ps2_mouse;
 
 logic info_req;
 logic [7:0] info;
-//logic [1:0] last_paddle; // TODO: ongebruikt?
 logic pad0_assigned, pad1_assigned, pad2_assigned, pad3_assigned;
-//logic old_auto_paddle, auto_paddle; // TODO: ongebruikt?
 
 // PADDLE END
 
@@ -445,7 +433,7 @@ hps_io #(.CONF_STR(CONF_STR), .VDNUM(3), .BLKSZ(1)) hps_io
 	.joystick_r_analog_3  (joyar_3),
 	.paddle_0           (pd_0),
 	.paddle_1           (pd_1),
-	.paddle_2           (pd_2), // TODO: Can these two be removed or not? Always pass zero value 
+	.paddle_2           (pd_2),
 	.paddle_3           (pd_3),
 
 	.info_req           (info_req),
@@ -653,7 +641,7 @@ wire [7:0] mc_data = mc_nvram_sel ? mc_nvram_out : sdram_out;
 
 
 ///// PADDLE
-assign info_req = pad0_assigned | pad1_assigned;// | pad2_assigned | pad3_assigned;
+assign info_req = pad0_assigned | pad1_assigned;
 
 always_comb begin
 	info = 8'd0;
@@ -661,42 +649,32 @@ always_comb begin
 		info = 8'd1;
 	if (pad1_assigned)
 		info = 8'd2;
-	//if (pad2_assigned)
-	//	info = 8'd3;
-	//if (pad3_assigned)
-	//	info = 8'd4;
 end
 
 wire porta_type = status[31];//, portb_type = status[31];
 logic [3:0] pad_b;
 logic [3:0] is_paddle;
 logic [7:0] pad_ax[4];
-//logic [3:0] pad_wire;
 logic [15:0] joya_a, joya_b, joya_c, joya_d;
-//logic [7:0] pd_a, pd_b, pd_c, pd_d;
-//logic sb_a, sb_b, sb_c, sb_d;
-//logic pdb_a, pdb_b, pdb_c, pdb_d;
-
-//wire [3:0] paddle_mask = {(portb_type == 1'd1 ? 2'b11 : 2'b00), (porta_type == 1'd1 ? 2'b11 : 2'b00)};
-wire [3:0] paddle_mask = porta_type == 1'd1 ? 4'b0011 : 4'b0000; // TODO: might have to be upper two bits instead
+wire [3:0] paddle_mask = porta_type == 1'd1 ? 4'b0011 : 4'b0000;
 
 paddle_chooser paddles
 (
 	.clk        (clk_sys),
 	.reset      (reset),
-	.mask       (paddle_mask), //TODO?: Change to two bits in paddle code
-	.enable0    (1'b1), // TODO: Enables zijn niet geimmplementeerd, mask wordt gebruikt
+	.mask       (paddle_mask),
+	.enable0    (1'b1),
 	.enable1    (1'b1),
-	.use_multi  (1'b1), //(status[52]), //TODO: Dit is twee paddles op enkele controller, is dat nuttig? 
+	.use_multi  (1'b1),
 	.mouse      (ps2_mouse),
 	.analog     ({joya_3, joya_2, joya_1, joya_0}),
-	.paddle     ({pd_3, pd_2, pd_1, pd_0}), // TODO?: Change to only pd_0 and pd_1, also in paddle code
+	.paddle     ({pd_3, pd_2, pd_1, pd_0}),
 	.buttons_in ({joy3[4], joy2[4], joy1[4], joy0[4]}),
 	.alt_b_in   ({joy3[5], joy2[5], joy1[5], joy0[5]}),
 	.paddle_range (status[32]),
 
 	.assigned   ({pad3_assigned, pad2_assigned, pad1_assigned, pad0_assigned}),
-	.pd_out     ({pad_ax[3], pad_ax[2], pad_ax[1], pad_ax[0]}), // TODO: Always pass zero for 2 and 3. Paddle 1a and 1b might not be 0 and 1 here...
+	.pd_out     ({pad_ax[3], pad_ax[2], pad_ax[1], pad_ax[0]}),
 	.paddle_but (pad_b),
 	.is_paddle  (is_paddle)
 );
@@ -705,8 +683,7 @@ paddle_chooser paddles
 
 wire		   paddle_swap = status[30];
 wire [1:0]	port_type = status[31];
-wire [15:0] joy = joy0 | joy1 | joy2 | joy3; //TODO: Moeten we hier nog iets uitfilteren als het een paddle controller is?
-// TODO: Ik verwacht niet dat je er hier twee van weg kan halen. De eerste twee paddles waarschijnlijk niet altijd nul en één, of ligt dat aan controller nummer?
+wire [15:0] joy = joy0 | joy1 | joy2 | joy3;
 wire        firebutton = (~is_paddle[0] ? joy0[4] : 1'b0) | (~is_paddle[1] ? joy1[4] : 1'b0) | (~is_paddle[2] ? joy2[4] : 1'b0) | (~is_paddle[3] ? joy3[4] : 1'b0);
 
 // joystick directions combined with paddle buttons (paddle a is right, paddle b is left)
