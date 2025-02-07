@@ -184,3 +184,66 @@ module paddle_chooser
 		end
 	end
 endmodule
+
+module paddle_scaler (
+	input clk,
+	input reset,
+	input [7:0] paddle_value,
+	output logic [7:0] scaled_value
+);
+
+	logic [7:0] min_value, max_value, range;
+
+	// Fixed-point 8.8 1/n table (255 values, no division by zero)
+	logic [15:0] fixed_point_divide [0:254] = '{
+		16'hFFFF, 16'h7FFF, 16'h5555, 16'h3FFF, 16'h3333, 16'h2AAA, 16'h2492, 16'h1FFF,
+		16'h1C71, 16'h1999, 16'h1745, 16'h1555, 16'h13B1, 16'h1249, 16'h1111, 16'hFFF,
+		16'hF0F, 16'hE38, 16'hD79, 16'hCCC, 16'hC30, 16'hBA2, 16'hB21, 16'hAAA,
+		16'hA3D, 16'h9D8, 16'h97B, 16'h924, 16'h8D3, 16'h888, 16'h842, 16'h7FF,
+		16'h7C1, 16'h787, 16'h750, 16'h71C, 16'h6EB, 16'h6BC, 16'h690, 16'h666,
+		16'h63E, 16'h618, 16'h5F4, 16'h5D1, 16'h5B0, 16'h590, 16'h572, 16'h555,
+		16'h539, 16'h51E, 16'h505, 16'h4EC, 16'h4D4, 16'h4BD, 16'h4A7, 16'h492,
+		16'h47D, 16'h469, 16'h456, 16'h444, 16'h432, 16'h421, 16'h410, 16'h3FF,
+		16'h3F0, 16'h3E0, 16'h3D2, 16'h3C3, 16'h3B5, 16'h3A8, 16'h39B, 16'h38E,
+		16'h381, 16'h375, 16'h369, 16'h35E, 16'h353, 16'h348, 16'h33D, 16'h333,
+		16'h329, 16'h31F, 16'h315, 16'h30C, 16'h303, 16'h2FA, 16'h2F1, 16'h2E8,
+		16'h2E0, 16'h2D8, 16'h2D0, 16'h2C8, 16'h2C0, 16'h2B9, 16'h2B1, 16'h2AA,
+		16'h2A3, 16'h29C, 16'h295, 16'h28F, 16'h288, 16'h282, 16'h27C, 16'h276,
+		16'h270, 16'h26A, 16'h264, 16'h25E, 16'h259, 16'h253, 16'h24E, 16'h249,
+		16'h243, 16'h23E, 16'h239, 16'h234, 16'h230, 16'h22B, 16'h226, 16'h222,
+		16'h21D, 16'h219, 16'h214, 16'h210, 16'h20C, 16'h208, 16'h204, 16'h1FF,
+		16'h1FC, 16'h1F8, 16'h1F4, 16'h1F0, 16'h1EC, 16'h1E9, 16'h1E5, 16'h1E1,
+		16'h1DE, 16'h1DA, 16'h1D7, 16'h1D4, 16'h1D0, 16'h1CD, 16'h1CA, 16'h1C7,
+		16'h1C3, 16'h1C0, 16'h1BD, 16'h1BA, 16'h1B7, 16'h1B4, 16'h1B2, 16'h1AF,
+		16'h1AC, 16'h1A9, 16'h1A6, 16'h1A4, 16'h1A1, 16'h19E, 16'h19C, 16'h199,
+		16'h197, 16'h194, 16'h192, 16'h18F, 16'h18D, 16'h18A, 16'h188, 16'h186,
+		16'h183, 16'h181, 16'h17F, 16'h17D, 16'h17A, 16'h178, 16'h176, 16'h174,
+		16'h172, 16'h170, 16'h16E, 16'h16C, 16'h16A, 16'h168, 16'h166, 16'h164,
+		16'h162, 16'h160, 16'h15E, 16'h15C, 16'h15A, 16'h158, 16'h157, 16'h155,
+		16'h153, 16'h151, 16'h150, 16'h14E, 16'h14C, 16'h14A, 16'h149, 16'h147,
+		16'h146, 16'h144, 16'h142, 16'h141, 16'h13F, 16'h13E, 16'h13C, 16'h13B,
+		16'h139, 16'h138, 16'h136, 16'h135, 16'h133, 16'h132, 16'h130, 16'h12F,
+		16'h12E, 16'h12C, 16'h12B, 16'h129, 16'h128, 16'h127, 16'h125, 16'h124,
+		16'h123, 16'h121, 16'h120, 16'h11F, 16'h11E, 16'h11C, 16'h11B, 16'h11A,
+		16'h119, 16'h118, 16'h116, 16'h115, 16'h114, 16'h113, 16'h112, 16'h111,
+		16'h10F, 16'h10E, 16'h10D, 16'h10C, 16'h10B, 16'h10A, 16'h109, 16'h108,
+		16'h107, 16'h106, 16'h105, 16'h104, 16'h103, 16'h102, 16'h101
+	};
+
+	always @(posedge clk) begin
+
+		if (~reset) begin
+			if (min_value > paddle_value) min_value <= paddle_value;
+			if (max_value < paddle_value) max_value <= paddle_value;
+			range <= max_value - min_value;
+		end
+		else begin
+			// Initialize at a safe range, to have a smooth range adjustment experience
+			min_value <= 32;
+			max_value <= 64;
+			range <= max_value - min_value;	
+		end
+		
+		scaled_value = ((paddle_value - min_value) * fixed_point_divide[range - 8'd1]) >> 4'd8;
+	end
+endmodule

@@ -679,6 +679,12 @@ paddle_chooser paddles
 	.is_paddle  (is_paddle)
 );
 
+
+logic [7:0] paddle_scaled[2]; 
+
+paddle_scaler ps0 (clk_sys, reset || ~paddle_mask[0], pad_ax[0][7:0], paddle_scaled[0]);
+paddle_scaler ps1 (clk_sys, reset || ~paddle_mask[1], pad_ax[1][7:0], paddle_scaled[1]);
+
 /////
 
 wire		   paddle_swap = status[30];
@@ -691,8 +697,11 @@ wire [1:0] paddle_buttons = paddle_swap ? {pad_b[0], pad_b[1]} : {pad_b[1], pad_
 wire [1:0] joy_horizontal = {joy[0], joy[1]} | paddle_buttons;
 
 // paddle analog values
-wire [7:0] paddle_a = paddle_swap ? pad_ax[1][7:0] : pad_ax[0][7:0];
-wire [7:0] paddle_b = paddle_swap ? pad_ax[0][7:0] : pad_ax[1][7:0];
+//wire [7:0] paddle_a = paddle_swap ? pad_ax[1][7:0] : pad_ax[0][7:0];
+//wire [7:0] paddle_b = paddle_swap ? pad_ax[0][7:0] : pad_ax[1][7:0];
+
+wire [7:0] paddle_a = paddle_swap ? paddle_scaled[1][7:0] : paddle_scaled[0][7:0];
+wire [7:0] paddle_b = paddle_swap ? paddle_scaled[0][7:0] : paddle_scaled[1][7:0];
 
 reg [10:0] v20_key;
 always @(posedge clk_sys) begin
