@@ -195,7 +195,8 @@ module paddle_scaler (
 	logic [7:0] min_value, max_value, range;
 
 	// Fixed-point 8.8 1/n table (255 values, no division by zero)
-	logic [15:0] fixed_point_divide [0:254] = '{
+	//logic [15:0] fixed_point_divide [0:254] = '{
+	logic [15:0] fixed_point_divide [255] = '{
 		16'hFFFF, 16'h7FFF, 16'h5555, 16'h3FFF, 16'h3333, 16'h2AAA, 16'h2492, 16'h1FFF,
 		16'h1C71, 16'h1999, 16'h1745, 16'h1555, 16'h13B1, 16'h1249, 16'h1111, 16'hFFF,
 		16'hF0F, 16'hE38, 16'hD79, 16'hCCC, 16'hC30, 16'hBA2, 16'hB21, 16'hAAA,
